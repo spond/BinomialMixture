@@ -11,7 +11,7 @@ cat data/test.txt | /path/to/BinMix
 
 to get the following JSON output 
 
-`
+
 {
 "1" : {
 "Log-L":-191449.6814,
@@ -27,6 +27,6 @@ to get the following JSON output
 "weights": [ 0.804,0.196]
 }
 }
-`
+
 
 The data were simulated with rates 0.3 (w=0.8) and 0.9 (w=0.2) 
