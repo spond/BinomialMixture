@@ -312,6 +312,8 @@ int main (int argc, const char * argv[])
         if (c_aic < best_aic) {
             cout << (rate_class_count > 1? ',' : ' ') << endl << '"' << rate_class_count << '"' << " : ";
             report_model ( final_logL,  c_aic,  rates,  weights, rate_class_count);
+            if (previous_rates)   delete [] previous_rates;
+            if (previous_weights) delete [] previous_weights;
             previous_rates   = rates;
             previous_weights = weights;
             best_aic = c_aic;
@@ -319,9 +321,43 @@ int main (int argc, const char * argv[])
             go_on = false;
         }
         
+        if (go_on == false && rate_class_count > 2) {
+        
+            double  * pij          = new double [data_points*rate_class_count],
+                    min_rate       = 1.,
+                    min_rate_index = 0;
+            
+            rate_class_count --;
+            for (unsigned long rclass = 0; rclass < rate_class_count; rclass ++) {
+                    if (previous_rates[rclass] < min_rate) {
+                        min_rate = previous_rates[rclass];
+                        min_rate_index = rclass;
+                    }
+            }
+            
+            cout << ",\n\"background_rate\" : " << min_rate;
+
+            compute_pij(pij, coverage, majority, data_points, previous_rates, previous_weights, rate_class_count);
+            
+            cout << ",\n\"prob_above_background\" : [";
+            
+            for (unsigned long i = 0; i < data_points; i++) {
+                double sum = 0.;
+                for (unsigned long j = 0; j < rate_class_count; j++) {
+                    if (j != min_rate_index) {
+                        sum += pij[i*rate_class_count + j];
+                    }
+                }
+                cout << (i>0 ? ',' : ' ') << sum;
+            }
+            
+            cout << "]\n";
+            delete [] pij;
+        }
+        
         rate_class_count ++;
                 
-        if (go_on) {
+        if (!go_on) {
             delete [] rates;
             delete [] weights;
         }
@@ -332,8 +368,8 @@ int main (int argc, const char * argv[])
     cout << "}" << endl;       
     delete [] coverage;
     delete [] majority;
-    //if (previous_rates)   delete [] previous_rates;
-    //if (previous_weights) delete [] previous_weights;
+    if (previous_rates)   delete [] previous_rates;
+    if (previous_weights) delete [] previous_weights;
     
     return 0;
 
